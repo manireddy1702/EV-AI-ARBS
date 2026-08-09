@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-Based Adaptive Regenerative Braking Optimization System for Electric Bikes — Real-Time Simulation Dashboard">
+    <title>AI Regenerative Braking System — Live Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- ═══════════════════ HEADER ═══════════════════ -->
+    <header id="main-header">
+        <div class="header-left">
+            <div class="logo-mark">
+                <svg viewBox="0 0 40 40" class="logo-svg">
+                    <circle cx="20" cy="20" r="18" fill="none" stroke="url(#logoGrad)" stroke-width="2"/>
+                    <path d="M20 6 L20 34 M10 14 L20 6 L30 14 M12 24 L20 34 L28 24" fill="none" stroke="url(#logoGrad)" stroke-width="2" stroke-linecap="round"/>
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#00f0ff"/>
+                            <stop offset="100%" stop-color="#7c3aed"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <div class="header-title">
+                <h1>AI Regenerative Braking System</h1>
+                <span class="subtitle">Adaptive Energy Recovery • Electric Bike</span>
+            </div>
+        </div>
+        <div class="header-center">
+            <div id="system-status" class="status-badge status-standby">
+                <span class="status-dot"></span>
+                <span id="status-text">STANDBY</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="header-stat">
+                <span class="stat-label">Session</span>
+                <span id="session-time" class="stat-value mono">00:00</span>
+            </div>
+            <div class="header-stat">
+                <span class="stat-label">Cycle</span>
+                <span id="sim-cycle" class="stat-value mono">0</span>
+            </div>
+            <div class="header-stat">
+                <span class="stat-label">Freq</span>
+                <span id="sim-freq" class="stat-value mono">10 Hz</span>
+            </div>
+            <a href="terminal.html" class="header-ecu-btn" title="Launch ECU Diagnostic Terminal">
+                <span>📟 ECU TERMINAL</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- ═══════════════════ MAIN GRID ═══════════════════ -->
+    <main id="dashboard">
+
+        <!-- ── ROW 1: Scenario & Manual Control + Speed Gauge + AI Engine ── -->
+        <section class="panel panel-scenario" id="panel-scenario">
+            <div class="panel-header">
+                <span class="panel-icon">🎮</span>
+                <h2>Ride Scenario & Controls</h2>
+            </div>
+            <div class="panel-body">
+                <div class="scenario-buttons">
+                    <button class="scenario-btn active" data-scenario="urban" id="btn-urban">
+                        <span class="sc-icon">🏙️</span>Urban
+                    </button>
+                    <button class="scenario-btn" data-scenario="highway" id="btn-highway">
+                        <span class="sc-icon">🛣️</span>Highway
+                    </button>
+                    <button class="scenario-btn" data-scenario="downhill" id="btn-downhill">
+                        <span class="sc-icon">⛰️</span>Downhill
+                    </button>
+                    <button class="scenario-btn emergency" data-scenario="emergency" id="btn-emergency">
+                        <span class="sc-icon">🚨</span>Emergency
+                    </button>
+                    <button class="scenario-btn custom-mode-btn" data-scenario="custom" id="btn-custom">
+                        <span class="sc-icon">🕹️</span>Custom
+                    </button>
+                </div>
+
+                <div class="manual-controls-container">
+                    <div class="control-group">
+                        <label class="control-label">Brake Lever</label>
+                        <input type="range" id="brake-lever" min="0" max="100" value="0" class="slider brake-slider">
+                        <div class="slider-labels">
+                            <span>Off</span>
+                            <span id="brake-lever-val" class="mono">0%</span>
+                            <span>Max (10 bar)</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Motor Throttle</label>
+                        <input type="range" id="throttle-lever" min="0" max="100" value="50" class="slider throttle-slider">
+                        <div class="slider-labels">
+                            <span>Off</span>
+                            <span id="throttle-lever-val" class="mono">50%</span>
+                            <span>Max (120 km/h)</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Road Condition</label>
+                        <div class="road-selector">
+                            <button class="road-btn active" data-road="dry" id="btn-dry">☀️ Dry</button>
+                            <button class="road-btn" data-road="wet" id="btn-wet">🌧️ Wet</button>
+                            <button class="road-btn" data-road="gravel" id="btn-gravel">🪨 Gravel</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Battery SOC Override</label>
+                        <input type="range" id="soc-override" min="10" max="100" value="75" class="slider soc-slider">
+                        <div class="slider-labels">
+                            <span>10% Low</span>
+                            <span id="soc-override-val" class="mono">75%</span>
+                            <span>100% Full</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label">Battery Temp Control</label>
+                        <input type="range" id="temp-override" min="20" max="65" value="28" class="slider temp-slider">
+                        <div class="slider-labels">
+                            <span>20°C Normal</span>
+                            <span id="temp-override-val" class="mono">28°C</span>
+                            <span>65°C Danger</span>
+                        </div>
+                        <div class="temp-preset-buttons">
+                            <button class="temp-btn btn-cool active" id="btn-temp-cool" data-temp="28">🟢 Normal (28°C)</button>
+                            <button class="temp-btn btn-warm" id="btn-temp-warm" data-temp="48">🟡 Warm (48°C)</button>
+                            <button class="temp-btn btn-hot" id="btn-temp-hot" data-temp="58">🔴 Overheat (58°C)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel panel-speed" id="panel-speed">
+            <div class="panel-header">
+                <span class="panel-icon">⚡</span>
+                <h2>Vehicle Speed</h2>
+            </div>
+            <div class="panel-body gauge-body">
+                <div class="speed-gauge-container">
+                    <canvas id="speed-gauge" width="280" height="280"></canvas>
+                    <div class="speed-center">
+                        <span id="speed-value" class="gauge-val">0</span>
+                        <span class="gauge-unit">km/h</span>
+                    </div>
+                </div>
+                <div class="speed-meta">
+                    <div class="mini-stat">
+                        <span class="mini-label">Wheel RPM</span>
+                        <span id="wheel-rpm" class="mini-val mono">0</span>
+                    </div>
+                    <div class="mini-stat">
+                        <span class="mini-label">Distance</span>
+                        <span id="distance" class="mini-val mono">0.00 km</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel panel-ai" id="panel-ai">
+            <div class="panel-header">
+                <div class="panel-title-group">
+                    <span class="panel-icon">🧠</span>
+                    <h2>AI Decision & Control Module</h2>
+                </div>
+                <div class="header-ai-toggle">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="ai-enable-toggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span id="ai-toggle-label" class="toggle-text text-cyan">AI OPTIMIZATION: ON</span>
+                </div>
+                <span class="ai-badge" id="active-model-badge">ANN NEURAL NET</span>
+            </div>
+            <div class="panel-body ai-module-body">
+
+                <!-- ── AI Intervention Status Alert Banner ── -->
+                <div class="ai-alert-banner" id="ai-alert-banner">
+                    <span class="ai-alert-icon">⚡</span>
+                    <span id="ai-alert-text" class="mono">SYSTEM OPTIMAL — AI REGEN ADAPTATION ACTIVE</span>
+                </div>
+
+                <!-- ── 1. Model Selector Tabs ── -->
+                <div class="ai-model-selector">
+                    <button class="ai-model-btn active" data-model="ANN" id="btn-model-ann">
+                        <span class="m-icon">🕸️</span> ANN Neural Net
+                    </button>
+                    <button class="ai-model-btn" data-model="FUZZY" id="btn-model-fuzzy">
+                        <span class="m-icon">🎛️</span> Fuzzy Logic
+                    </button>
+                    <button class="ai-model-btn" data-model="RANDOM_FOREST" id="btn-model-rf">
+                        <span class="m-icon">🌲</span> Random Forest
+                    </button>
+                    <button class="ai-model-btn" data-model="RL_AGENT" id="btn-model-rl">
+                        <span class="m-icon">🎯</span> RL Q-Agent
+                    </button>
+                </div>
+
+                <div class="ai-main-grid">
+                    <!-- ── 2. Real-Time Inference Inputs & Outputs ── -->
+                    <div class="ai-card inference-card">
+                        <div class="card-subtitle">
+                            <span>Real-Time Telemetry & AI Outputs</span>
+                            <span id="ai-model-name-label" class="mono text-cyan">ANN (Multilayer Perceptron)</span>
+                        </div>
+                        <div class="ai-inputs-outputs-row">
+                            <div class="ai-inputs-col">
+                                <span class="col-title">Sensors (Inputs)</span>
+                                <div class="ai-feat-grid">
+                                    <div class="ai-feat"><span class="feat-name">Speed</span><span id="ai-in-speed" class="feat-val mono">0.0 km/h</span></div>
+                                    <div class="ai-feat"><span class="feat-name">Brake</span><span id="ai-in-brake" class="feat-val mono">0.0 bar</span></div>
+                                    <div class="ai-feat"><span class="feat-name">SOC</span><span id="ai-in-soc" class="feat-val mono">75.0%</span></div>
+                                    <div class="ai-feat"><span class="feat-name">Bat °C</span><span id="ai-in-btemp" class="feat-val mono">28.0°C</span></div>
+                                    <div class="ai-feat"><span class="feat-name">Mot °C</span><span id="ai-in-mtemp" class="feat-val mono">30.0°C</span></div>
+                                    <div class="ai-feat"><span class="feat-name">Road</span><span id="ai-in-road" class="feat-val mono">DRY</span></div>
+                                </div>
+                            </div>
+
+                            <div class="ai-outputs-col">
+                                <span class="col-title">AI Controls (Outputs)</span>
+                                <div class="ai-output-grid">
+                                    <div class="ai-out">
+                                        <span class="out-label">Regen Torque</span>
+                                        <span id="ai-out-torque" class="out-val mono">0.0 N·m</span>
+                                        <div class="out-bar"><div id="torque-bar" class="out-bar-fill"></div></div>
+                                    </div>
+                                    <div class="ai-out">
+                                        <span class="out-label">Regen Power</span>
+                                        <span id="ai-out-power" class="out-val mono">0 W</span>
+                                        <div class="out-bar"><div id="power-bar" class="out-bar-fill bar-green"></div></div>
+                                    </div>
+                                    <div class="ai-out">
+                                        <span class="out-label">Slip Risk</span>
+                                        <span id="ai-out-slip" class="out-val mono">0%</span>
+                                        <div class="out-bar"><div id="slip-bar" class="out-bar-fill bar-red"></div></div>
+                                    </div>
+                                    <div class="ai-out">
+                                        <span class="out-label">Charge Current</span>
+                                        <span id="ai-out-current" class="out-val mono">0.0 A</span>
+                                        <div class="out-bar"><div id="current-bar" class="out-bar-fill bar-yellow"></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ai-confidence-bar-row">
+                            <div class="conf-info">
+                                <span>Model Confidence:</span>
+                                <span id="confidence-val" class="mono text-cyan">98.5%</span>
+                            </div>
+                            <div class="conf-meter"><div id="confidence-meter-fill" class="conf-meter-fill" style="width: 98.5%;"></div></div>
+                        </div>
+                    </div>
+
+                    <!-- ── 3. Real-Life Learned AI Decision Rules Engine ── -->
+                    <div class="ai-card real-life-rules-card">
+                        <div class="card-subtitle">
+                            <span>Real-Life Learned AI Rules Engine</span>
+                            <span class="pulse-indicator">● LIVE EVALUATION</span>
+                        </div>
+
+                        <div class="ai-rules-list">
+                            <div class="rule-item" id="rule-item-speed">
+                                <div class="rule-header">
+                                    <span class="rule-title">⚡ High Speed Energy Capture</span>
+                                    <span id="rule-status-speed" class="rule-badge badge-standby">STANDBY</span>
+                                </div>
+                                <p class="rule-desc">At high speeds, stronger regen is applied to maximize kinetic energy recovery.</p>
+                            </div>
+
+                            <div class="rule-item" id="rule-item-soc">
+                                <div class="rule-header">
+                                    <span class="rule-title">🔋 Battery Overcharge Protection</span>
+                                    <span id="rule-status-soc" class="rule-badge badge-ok">NORMAL (75%)</span>
+                                </div>
+                                <p class="rule-desc">If battery SOC exceeds 90%, regen torque tapers down to prevent overcharging.</p>
+                            </div>
+
+                            <div class="rule-item" id="rule-item-safety">
+                                <div class="rule-header">
+                                    <span class="rule-title">🛡️ Hard Braking Rider Safety</span>
+                                    <span id="rule-status-safety" class="rule-badge badge-standby">STANDBY</span>
+                                </div>
+                                <p class="rule-desc">During emergency stops, prioritizes mechanical braking and anti-lock stability over regen.</p>
+                            </div>
+
+                            <div class="rule-item" id="rule-item-thermal">
+                                <div class="rule-header">
+                                    <span class="rule-title">🌡️ Battery Thermal Protection</span>
+                                    <span id="rule-status-thermal" class="rule-badge badge-ok">COOL (&lt;50°C)</span>
+                                </div>
+                                <p class="rule-desc">If battery/motor temp is high (&gt;50°C), charging current is throttled to protect cells.</p>
+                            </div>
+
+                            <div class="rule-item" id="rule-item-light">
+                                <div class="rule-header">
+                                    <span class="rule-title">⚙️ Light Braking Max Efficiency</span>
+                                    <span id="rule-status-light" class="rule-badge badge-standby">STANDBY</span>
+                                </div>
+                                <p class="rule-desc">During gentle lever modulation, maximizes smooth regen recovery without destabilizing bike.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── 4. Explainable AI (XAI) Feature Importance ── -->
+                    <div class="ai-card xai-card">
+                        <div class="card-subtitle">
+                            <span>Explainable AI (XAI) Feature Impact</span>
+                            <span class="mono text-dim">SHAP/LIME Analysis</span>
+                        </div>
+
+                        <div class="xai-bars-list">
+                            <div class="xai-row">
+                                <span class="xai-label">Brake Pressure</span>
+                                <div class="xai-track"><div id="xai-bar-brake" class="xai-fill fill-cyan" style="width: 42.5%;"></div></div>
+                                <span id="xai-val-brake" class="xai-val mono">42.5%</span>
+                            </div>
+                            <div class="xai-row">
+                                <span class="xai-label">Vehicle Speed</span>
+                                <div class="xai-track"><div id="xai-bar-speed" class="xai-fill fill-purple" style="width: 24.8%;"></div></div>
+                                <span id="xai-val-speed" class="xai-val mono">24.8%</span>
+                            </div>
+                            <div class="xai-row">
+                                <span class="xai-label">Road Friction ($\mu$)</span>
+                                <div class="xai-track"><div id="xai-bar-road" class="xai-fill fill-yellow" style="width: 16.2%;"></div></div>
+                                <span id="xai-val-road" class="xai-val mono">16.2%</span>
+                            </div>
+                            <div class="xai-row">
+                                <span class="xai-label">Battery SOC</span>
+                                <div class="xai-track"><div id="xai-bar-soc" class="xai-fill fill-green" style="width: 10.3%;"></div></div>
+                                <span id="xai-val-soc" class="xai-val mono">10.3%</span>
+                            </div>
+                            <div class="xai-row">
+                                <span class="xai-label">Thermal Limits</span>
+                                <div class="xai-track"><div id="xai-bar-temp" class="xai-fill fill-red" style="width: 6.2%;"></div></div>
+                                <span id="xai-val-temp" class="xai-val mono">6.2%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ── ROW 2: Sensors + Motor Controller + BMS ── -->
+        <section class="panel panel-sensors" id="panel-sensors">
+            <div class="panel-header">
+                <span class="panel-icon">📡</span>
+                <h2>Live Sensors</h2>
+                <span class="sensor-hz mono">10 Hz</span>
+            </div>
+            <div class="panel-body">
+                <div class="sensor-grid">
+                    <div class="sensor-card" id="sensor-speed">
+                        <div class="sensor-icon">🏎️</div>
+                        <div class="sensor-info">
+                            <span class="sensor-name">Speed</span>
+                            <span class="sensor-val mono"><span id="s-speed">0.0</span> <small>km/h</small></span>
+                        </div>
+                        <div class="sensor-bar"><div id="bar-speed" class="sensor-bar-fill"></div></div>
+                    </div>
+                    <div class="sensor-card" id="sensor-brake">
+                        <div class="sensor-icon">🛑</div>
+                        <div class="sensor-info">
+                            <span class="sensor-name">Brake Pressure</span>
+                            <span class="sensor-val mono"><span id="s-brake">0.0</span> <small>bar</small></span>
+                        </div>
+                        <div class="sensor-bar"><div id="bar-brake" class="sensor-bar-fill bar-red"></div></div>
+                    </div>
+                    <div class="sensor-card" id="sensor-wheelrpm">
+                        <div class="sensor-icon">⚙️</div>
+                        <div class="sensor-info">
+                            <span class="sensor-name">Wheel RPM</span>
+                            <span class="sensor-val mono"><span id="s-wheelrpm">0</span> <small>RPM</small></span>
+                        </div>
+                        <div class="sensor-bar"><div id="bar-wheelrpm" class="sensor-bar-fill bar-purple"></div></div>
+                    </div>
+                    <div class="sensor-card" id="sensor-batsoc">
+                        <div class="sensor-icon">🔋</div>
+                        <div class="sensor-info">
+                            <span class="sensor-name">Battery SOC</span>
+                            <span class="sensor-val mono"><span id="s-batsoc">72.0</span> <small>%</small></span>
+                        </div>
+                        <div class="sensor-bar"><div id="bar-batsoc" class="sensor-bar-fill bar-green"></div></div>
+                    </div>
+                    <div class="sensor-card" id="sensor-batvolt">
+                        <div class="sensor-icon">⚡</div>
+                        <div class="sensor-info">
+                            <span class="sensor-name">Battery Voltage</span>
+                            <span class="sensor-val mono"><span id="s-batvolt">48.0</span> <small>V</small></span>
+                        </div>
+                        <div class="sensor-bar"><div id="bar-batvolt" class="sensor-bar-fill bar-yellow"></div></div>
+                    </div>
+                    <div class="sensor-card" id="sensor-batcurr">
+                        <div class="sensor-icon">〰️</div>
+                        <div class="sensor-info">
+                            <span class="sensor-name">Current (INA219)</span>
+                            <span class="sensor-val mono"><span id="s-batcurr">0.0</span> <small>A</small></span>
+                        </div>
+                        <div class="sensor-bar"><div id="bar-batcurr" class="sensor-bar-fill"></div></div>
+                    </div>
+                    <div class="sensor-card" id="sensor-battemp">
+                        <div class="sensor-icon">🌡️</div>
+                        <div class="sensor-info">
+                            <span class="sensor-name">Battery Temp</span>
+                            <span class="sensor-val mono"><span id="s-battemp">28.0</span> <small>°C</small></span>
+                        </div>
+                        <div class="sensor-bar"><div id="bar-battemp" class="sensor-bar-fill bar-orange"></div></div>
+                    </div>
+                    <div class="sensor-card" id="sensor-mottemp">
+                        <div class="sensor-icon">🔥</div>
+                        <div class="sensor-info">
+                            <span class="sensor-name">Motor Temp</span>
+                            <span class="sensor-val mono"><span id="s-mottemp">30.0</span> <small>°C</small></span>
+                        </div>
+                        <div class="sensor-bar"><div id="bar-mottemp" class="sensor-bar-fill bar-orange"></div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel panel-motor" id="panel-motor">
+            <div class="panel-header">
+                <span class="panel-icon">🔄</span>
+                <h2>Motor Controller</h2>
+            </div>
+            <div class="panel-body">
+                <div class="motor-mode-display">
+                    <div id="motor-mode-ring" class="mode-ring">
+                        <svg viewBox="0 0 160 160">
+                            <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6"/>
+                            <circle id="motor-ring-arc" cx="80" cy="80" r="70" fill="none" stroke="#00f0ff" stroke-width="6" stroke-dasharray="439.82" stroke-dashoffset="439.82" stroke-linecap="round" transform="rotate(-90 80 80)"/>
+                        </svg>
+                        <div class="mode-center">
+                            <span id="motor-mode-icon" class="mode-icon">⏸️</span>
+                            <span id="motor-mode-text" class="mode-text">STANDBY</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="motor-stats">
+                    <div class="motor-stat">
+                        <span class="mstat-label">Back-EMF</span>
+                        <span id="motor-bemf" class="mstat-val mono">0.0 V</span>
+                    </div>
+                    <div class="motor-stat">
+                        <span class="mstat-label">Phase Current</span>
+                        <span id="motor-phase" class="mstat-val mono">0.0 A</span>
+                    </div>
+                    <div class="motor-stat">
+                        <span class="mstat-label">Regen Duty</span>
+                        <span id="motor-duty" class="mstat-val mono">0%</span>
+                    </div>
+                    <div class="motor-stat">
+                        <span class="mstat-label">Efficiency</span>
+                        <span id="motor-eff" class="mstat-val mono">0%</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel panel-bms" id="panel-bms">
+            <div class="panel-header">
+                <span class="panel-icon">🔋</span>
+                <h2>Battery Management</h2>
+            </div>
+            <div class="panel-body">
+                <div class="bms-gauge-container">
+                    <canvas id="soc-gauge" width="200" height="200"></canvas>
+                    <div class="soc-center">
+                        <span id="soc-value" class="gauge-val">72</span>
+                        <span class="gauge-unit">%</span>
+                    </div>
+                </div>
+                <div class="bms-stats">
+                    <div class="bms-stat">
+                        <span class="bstat-label">Voltage</span>
+                        <span id="bms-voltage" class="bstat-val mono">48.0 V</span>
+                    </div>
+                    <div class="bms-stat">
+                        <span class="bstat-label">Current</span>
+                        <span id="bms-current" class="bstat-val mono">0.0 A</span>
+                    </div>
+                    <div class="bms-stat">
+                        <span class="bstat-label">Power</span>
+                        <span id="bms-power" class="bstat-val mono">0.0 W</span>
+                    </div>
+                    <div class="bms-stat">
+                        <span class="bstat-label">Health</span>
+                        <span id="bms-health" class="bstat-val mono health-good">GOOD</span>
+                    </div>
+                </div>
+                <div class="bms-protections">
+                    <h3>Protections</h3>
+                    <div class="prot-grid">
+                        <div class="prot-item" id="prot-overvolt">
+                            <span class="prot-dot prot-ok"></span>
+                            <span>Over-Voltage</span>
+                        </div>
+                        <div class="prot-item" id="prot-overcurr">
+                            <span class="prot-dot prot-ok"></span>
+                            <span>Over-Current</span>
+                        </div>
+                        <div class="prot-item" id="prot-overheat">
+                            <span class="prot-dot prot-ok"></span>
+                            <span>Over-Heat</span>
+                        </div>
+                        <div class="prot-item" id="prot-undervolt">
+                            <span class="prot-dot prot-ok"></span>
+                            <span>Under-Voltage</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── ROW 3: Energy Recovery + Charts ── -->
+        <section class="panel panel-energy" id="panel-energy">
+            <div class="panel-header">
+                <span class="panel-icon">💡</span>
+                <h2>Energy Recovery</h2>
+            </div>
+            <div class="panel-body">
+                <div class="energy-hero">
+                    <div class="energy-main-stat">
+                        <span class="energy-big mono" id="energy-total">0.00</span>
+                        <span class="energy-unit">Wh Recovered</span>
+                    </div>
+                </div>
+                <div class="energy-grid">
+                    <div class="energy-stat">
+                        <span class="estat-icon">⚡</span>
+                        <div>
+                            <span class="estat-val mono" id="energy-power-now">0 W</span>
+                            <span class="estat-label">Live Power</span>
+                        </div>
+                    </div>
+                    <div class="energy-stat">
+                        <span class="estat-icon">📊</span>
+                        <div>
+                            <span class="estat-val mono" id="energy-efficiency">0%</span>
+                            <span class="estat-label">Efficiency</span>
+                        </div>
+                    </div>
+                    <div class="energy-stat">
+                        <span class="estat-icon">🛣️</span>
+                        <div>
+                            <span class="estat-val mono" id="energy-range">+0.00 km</span>
+                            <span class="estat-label">Range Added</span>
+                        </div>
+                    </div>
+                    <div class="energy-stat">
+                        <span class="estat-icon">🔄</span>
+                        <div>
+                            <span class="estat-val mono" id="energy-cycles">0</span>
+                            <span class="estat-label">Brake Events</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Power Flow Animation -->
+                <div class="power-flow" id="power-flow">
+                    <div class="flow-node flow-motor">
+                        <span>🔄</span>
+                        <small>Motor</small>
+                    </div>
+                    <div class="flow-arrow" id="flow-arrow-1">
+                        <div class="flow-particles"></div>
+                    </div>
+                    <div class="flow-node flow-controller">
+                        <span>🧠</span>
+                        <small>AI</small>
+                    </div>
+                    <div class="flow-arrow" id="flow-arrow-2">
+                        <div class="flow-particles"></div>
+                    </div>
+                    <div class="flow-node flow-bms">
+                        <span>🛡️</span>
+                        <small>BMS</small>
+                    </div>
+                    <div class="flow-arrow" id="flow-arrow-3">
+                        <div class="flow-particles"></div>
+                    </div>
+                    <div class="flow-node flow-battery">
+                        <span>🔋</span>
+                        <small>Battery</small>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel panel-charts" id="panel-charts">
+            <div class="panel-header">
+                <span class="panel-icon">📈</span>
+                <h2>Real-Time Charts</h2>
+            </div>
+            <div class="panel-body charts-grid">
+                <div class="chart-container">
+                    <h3>Speed & Braking Torque</h3>
+                    <canvas id="chart-speed-torque"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Battery SOC</h3>
+                    <canvas id="chart-soc"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Energy Recovered</h3>
+                    <canvas id="chart-energy"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Brake Pressure vs Regen Power</h3>
+                    <canvas id="chart-brake-power"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── ROW 4: System Block Diagram ── -->
+        <section class="panel panel-diagram" id="panel-diagram">
+            <div class="panel-header">
+                <span class="panel-icon">🔗</span>
+                <h2>System Block Diagram</h2>
+            </div>
+            <div class="panel-body">
+                <div class="block-diagram" id="block-diagram">
+                    <div class="bd-node bd-brake" id="bd-brake">
+                        <div class="bd-icon">🛑</div>
+                        <span>Brake Lever</span>
+                    </div>
+                    <div class="bd-connector bd-c1"><div class="bd-flow"></div></div>
+                    <div class="bd-node bd-sensor" id="bd-sensor">
+                        <div class="bd-icon">📡</div>
+                        <span>Pressure Sensor</span>
+                    </div>
+                    <div class="bd-connector bd-c2"><div class="bd-flow"></div></div>
+                    <div class="bd-node bd-esp32" id="bd-esp32">
+                        <div class="bd-icon">🔲</div>
+                        <span>ESP32</span>
+                    </div>
+                    <div class="bd-connector bd-c3"><div class="bd-flow"></div></div>
+                    <div class="bd-node bd-ai" id="bd-ai-node">
+                        <div class="bd-icon">🧠</div>
+                        <span>AI Model</span>
+                    </div>
+                    <div class="bd-connector bd-c4"><div class="bd-flow"></div></div>
+                    <div class="bd-node bd-mctrl" id="bd-mctrl">
+                        <div class="bd-icon">⚙️</div>
+                        <span>Motor Controller</span>
+                    </div>
+                    <div class="bd-connector bd-c5"><div class="bd-flow"></div></div>
+                    <div class="bd-node bd-motor" id="bd-motor-node">
+                        <div class="bd-icon">🔄</div>
+                        <span>BLDC Motor</span>
+                    </div>
+                    <div class="bd-connector bd-c6"><div class="bd-flow"></div></div>
+                    <div class="bd-node bd-bms-node" id="bd-bms-node">
+                        <div class="bd-icon">🛡️</div>
+                        <span>BMS</span>
+                    </div>
+                    <div class="bd-connector bd-c7"><div class="bd-flow"></div></div>
+                    <div class="bd-node bd-battery-node" id="bd-battery-node">
+                        <div class="bd-icon">🔋</div>
+                        <span>Battery</span>
+                    </div>
+                    <div class="bd-connector bd-c8"><div class="bd-flow"></div></div>
+                    <div class="bd-node bd-display" id="bd-display">
+                        <div class="bd-icon">📺</div>
+                        <span>LCD Display</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ═══════════════════ FOOTER ═══════════════════ -->
+    <footer id="main-footer">
+        <span>AI Regenerative Braking Optimization System • Final Year Project</span>
+        <span class="footer-tech">ESP32 • BLDC Motor • TensorFlow • Real-Time AI</span>
+    </footer>
+
+    <!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="js/sensor_simulator.js"></script>
+    <script src="js/ai_model.js"></script>
+    <script src="js/bms.js"></script>
+    <script src="js/motor_controller.js"></script>
+    <script src="js/energy_tracker.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
